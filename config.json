@@ -1,0 +1,10 @@
+{
+  "watch_terms": ["@gmail.com", "192.168", "#1234", "yourusername"],
+  "obs": {
+    "host": "localhost",
+    "port": 4455,
+    "password": "yourpassword",
+    "scene_on_leak": "LeakOverlay"
+  },
+  "scan_interval_sec": 3
+}

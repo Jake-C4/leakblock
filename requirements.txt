@@ -1,0 +1,10 @@
+pytesseract
+pillow
+mss
+tk
+obs-websocket-py
+opencv-python
+numpy
+timm
+torch
+transformers
