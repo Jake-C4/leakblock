@@ -14,11 +14,15 @@ def monitor():
 
         if leak_detector.contains_leak(text):
             print("Leak Detected!")
+            status_var.set("Leak Detected!")
             obs_controller.trigger_obs_scene()
 
-        if nsfw_detector.is_nsfw(img):
+        elif nsfw_detector.is_nsfw(img):
             print("NSFW Detected!")
+            status_var.set("NSFW Detected!")
             obs_controller.trigger_obs_scene()
+        else:
+            status_var.set("Monitoring...")
 
         time.sleep(config.get("scan_interval_sec", 3))
 
@@ -28,6 +32,10 @@ def run_gui():
 
     label = tk.Label(root, text="LeakBlock is running...", font=("Arial", 14))
     label.pack(pady=20)
+    
+    status_var = tk.StringVar()
+    status_label = tk.Label(root, textvariable=status_var, fg="red", font=("Arial", 12))
+    status_label.pack()
 
     def start_monitoring():
         threading.Thread(target=monitor, daemon=True).start()

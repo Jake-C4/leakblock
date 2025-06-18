@@ -1,23 +1,36 @@
+from transformers import AutoFeatureExtractor, AutoModelForImageClassification
 from PIL import Image
-import torchvision.transforms as T
-from timm.models import create_model
 import torch
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# Load the model and feature extractor from Hugging Face
+model_name = "Falconsai/nsfw_image_detection"
+extractor = AutoFeatureExtractor.from_pretrained(model_name)
+model = AutoModelForImageClassification.from_pretrained(model_name)
 
-# Use a pretrained model for NSFW detection (e.g., from NudeNet or similar)
-model = create_model('mobilenetv3_small_050', pretrained=True, num_classes=2)
+# Move model to GPU if available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 model.eval()
 
-transform = T.Compose([
-    T.Resize((224, 224)),
-    T.ToTensor(),
-])
-
 def is_nsfw(image: Image.Image) -> bool:
-    img_tensor = transform(image).unsqueeze(0).to(device)
+    # Resize and convert image to RGB
+    image = image.convert("RGB").resize((224, 224))
+
+    # Extract pixel values
+    inputs = extractor(images=image, return_tensors="pt").to(device)
+
+    # Run model
     with torch.no_grad():
-        output = model(img_tensor)
-        probs = torch.softmax(output, dim=1)[0]
-        return probs[1] > 0.85  # If class 1 is NSFW and confidence > 85%
+        outputs = model(**inputs)
+        logits = outputs.logits
+        probs = torch.softmax(logits, dim=1)[0]
+
+    # Get label + probability
+    label = probs.argmax().item()
+    confidence = probs[label].item()
+
+    # Label 1 is NSFW (per the model's docs)
+    if label == 1 and confidence > 0.85:
+        print(f"[NSFW DETECTED] Confidence: {confidence:.2f}")
+        return True
+    return False
