@@ -8,21 +8,28 @@ with open("config.json") as f:
     config = json.load(f)
 
 def monitor(status_var):
+    from PIL import Image
     while True:
         img = screen_capture.capture_screen()
+        print("[DEBUG] Screenshot captured. Size:", img.size)
+
+        # Show the captured screen (optional: comment out if annoying)
+        # img.show()  # Uncomment this line for visual debugging
+
         text = ocr_engine.extract_text_from_image(img)
+        print("[DEBUG] Extracted Text:", text[:100])  # show first 100 chars
 
         if leak_detector.contains_leak(text):
-            print("Leak Detected!")
+            print("[DEBUG] Leak Detected in text!")
             status_var.set("Leak Detected!")
             obs_controller.trigger_obs_scene()
 
         elif nsfw_detector.is_nsfw(img):
-            print("NSFW Detected!")
+            print("[DEBUG] NSFW Detected by model!")
             status_var.set("NSFW Detected!")
             obs_controller.trigger_obs_scene()
-
         else:
+            print("[DEBUG] Clean frame. No issues found.")
             status_var.set("Monitoring...")
 
         time.sleep(config.get("scan_interval_sec", 3))
