@@ -7,7 +7,7 @@ import json
 with open("config.json") as f:
     config = json.load(f)
 
-def monitor():
+def monitor(status_var):
     while True:
         img = screen_capture.capture_screen()
         text = ocr_engine.extract_text_from_image(img)
@@ -21,6 +21,7 @@ def monitor():
             print("NSFW Detected!")
             status_var.set("NSFW Detected!")
             obs_controller.trigger_obs_scene()
+
         else:
             status_var.set("Monitoring...")
 
@@ -32,13 +33,14 @@ def run_gui():
 
     label = tk.Label(root, text="LeakBlock is running...", font=("Arial", 14))
     label.pack(pady=20)
-    
+
     status_var = tk.StringVar()
     status_label = tk.Label(root, textvariable=status_var, fg="red", font=("Arial", 12))
     status_label.pack()
+    status_var.set("Waiting...")
 
     def start_monitoring():
-        threading.Thread(target=monitor, daemon=True).start()
+        threading.Thread(target=monitor, args=(status_var,), daemon=True).start()
         messagebox.showinfo("LeakBlock", "Monitoring started.")
 
     btn_start = tk.Button(root, text="Start Monitoring", command=start_monitoring)
